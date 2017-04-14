@@ -25,6 +25,8 @@ import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.administrator.mysensor.R.id.chart;
+
 /**
  * Created by Administrator on 2017-4-12.
  */
@@ -38,7 +40,7 @@ public class LightFragment extends Fragment {
     List<Entry> mEntries = new ArrayList<>();
 
     private static final int WIDTH = 10;
-    private static int CURRENT_OFFSET = 10;
+    private static int CURRENT_OFFSET = 0;
 
     private SensorEventListener mListener = new SensorEventListener() {
         @Override
@@ -55,7 +57,8 @@ public class LightFragment extends Fragment {
 
             dataSet.notifyDataSetChanged();
             data.notifyDataChanged();
-            mLineChart.invalidate();
+            mLineChart.moveViewToX(CURRENT_OFFSET);
+            mLineChart.notifyDataSetChanged();
             //mLineChart.setVisibleXRangeMaximum(120);
             // mLineChart.invalidate();
             CURRENT_OFFSET += WIDTH;
@@ -79,7 +82,7 @@ public class LightFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("LightFragment", "onCraeteView");
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
-        mLineChart = (LineChart) view.findViewById(R.id.chart);
+        mLineChart = (LineChart) view.findViewById(chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
         return view;
     }
@@ -99,20 +102,9 @@ public class LightFragment extends Fragment {
     }
 
     private void initChart() {
-        mEntries.add(new Entry(0,0));
 
-        Description description = new Description();
-        description.setText("光照曲线图");
-        mLineChart.setDescription(description);
-        LineData lineData = new LineData();
-        LineDataSet dataSet = new LineDataSet(mEntries, "光照曲线");
-        dataSet.setCircleColor(Color.BLUE);
-        dataSet.setColor(Color.BLUE);
-        lineData.addDataSet(dataSet);
-        mLineChart.setData(lineData);
-        mLineChart.invalidate();
-        mLineChart.setAutoScaleMinMaxEnabled(true);
-
+        mLineChart.getAxisLeft().setAxisMinimum(-1);
+        mLineChart.getAxisRight().setAxisMinimum(-1);
         XAxis myX = mLineChart.getXAxis();
         myX.setDrawGridLines(false);
         myX.setGridLineWidth(10);
@@ -120,6 +112,34 @@ public class LightFragment extends Fragment {
         myX.setPosition(XAxis.XAxisPosition.BOTTOM);
         myX.setEnabled(true);
         myX.setDrawLabels(false);
+
+
+
+        /*Matrix matrix = new Matrix();
+        //x轴缩放1.5倍
+        matrix.postScale(1.5f, 1f);
+        //在图表动画显示之前进行缩放
+        mLineChart.getViewPortHandler().refresh(matrix, mLineChart, false);
+        //x轴执行动画
+        mLineChart.animateX(2000);*/
+
+        Description description = new Description();
+        description.setText("光照曲线图");
+        mLineChart.setDescription(description);
+        LineData lineData = new LineData();
+        LineDataSet dataSet = new LineDataSet(mEntries, "光照曲线");
+
+
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet.setCubicIntensity(0.1f);
+        dataSet.setDrawCircles(false);
+        dataSet.setColor(Color.BLUE);
+        lineData.addDataSet(dataSet);
+        mLineChart.setData(lineData);
+        mLineChart.invalidate();
+        mLineChart.setAutoScaleMinMaxEnabled(true);
+
+
     }
 
     @Override
