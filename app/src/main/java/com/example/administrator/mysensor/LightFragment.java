@@ -134,6 +134,11 @@ public class LightFragment extends Fragment {
         dataSet.setCubicIntensity(0.1f);
         dataSet.setDrawCircles(false);
         dataSet.setColor(Color.BLUE);
+
+        dataSet.setDrawFilled(true);
+        dataSet.setFillColor(Color.GRAY);
+        dataSet.setFillAlpha(128);
+
         lineData.addDataSet(dataSet);
         mLineChart.setData(lineData);
         mLineChart.invalidate();
