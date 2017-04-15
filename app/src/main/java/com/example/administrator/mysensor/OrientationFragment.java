@@ -75,30 +75,56 @@ public class OrientationFragment extends Fragment {
                     mEntries1.remove(0);
                     mEntries2.remove(0);
                     mEntries3.remove(0);
+
+
+                    mLineChart.getXAxis().setAxisMinimum(mEntries1.get(1).getX());
                 }
 
                 mEntries1.add(new Entry(CURRENT_OFFSET, xValue));
                 mEntries2.add(new Entry(CURRENT_OFFSET, yValue));
                 mEntries3.add(new Entry(CURRENT_OFFSET, zValue));
 
-                LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
-                dataSetX.setColor(Color.RED);
-                dataSetX.setCircleColor(Color.RED);
-                LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
-                dataSetY.setColor(Color.BLUE);
-                dataSetY.setCircleColor(Color.BLUE);
-                LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
-                dataSetZ.setColor(Color.parseColor("#7fd919"));
-                dataSetZ.setCircleColor(Color.parseColor("#7fd919"));
-                List<ILineDataSet> dataSets = new ArrayList<>();
-                dataSets.add(dataSetX);
-                dataSets.add(dataSetY);
-                dataSets.add(dataSetZ);
-                LineData lineData = new LineData(dataSets);
-                mLineChart.setData(lineData);
-                mLineChart.invalidate();
+                if (mLineChart.getLineData() != null && mLineChart.getLineData().getDataSetCount() > 0) {
+                    LineDataSet dataSetX = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(0);
+                    LineDataSet dataSetY = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(1);
+                    LineDataSet dataSetZ = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(2);
+
+                    dataSetX.setValues(mEntries1);
+                    dataSetY.setValues(mEntries2);
+                    dataSetZ.setValues(mEntries3);
+
+                    mLineChart.getLineData().notifyDataChanged();
+                    mLineChart.notifyDataSetChanged();
+                    mLineChart.invalidate();
+                }else{
+                    LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
+                    dataSetX.setColor(Color.RED);
+                    dataSetX.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                    dataSetX.setCubicIntensity(0.1f);
+                    //dataSetX.setDrawCircles(false);
+                    LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
+                    dataSetY.setColor(Color.BLUE);
+                    dataSetY.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                    dataSetY.setCubicIntensity(0.1f);
+                    //dataSetY.setDrawCircles(false);
+                    LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
+                    dataSetZ.setColor(Color.GRAY);
+                    dataSetZ.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                    dataSetZ.setCubicIntensity(0.1f);
+                    //dataSetZ.setDrawCircles(false);
+
+                    List<ILineDataSet> dataSets = new ArrayList<>();
+                    dataSets.add(dataSetX);
+                    dataSets.add(dataSetY);
+                    dataSets.add(dataSetZ);
+                    LineData lineData = new LineData(dataSets);
+                    mLineChart.setData(lineData);
+                    mLineChart.moveViewToX(CURRENT_OFFSET);
+                    mLineChart.invalidate();
+                }
+
                 lastTime = currentTime;
-                CURRENT_OFFSET += OrientationFragment.WIDTH;
+                CURRENT_OFFSET += WIDTH;
             }
         }
 
@@ -130,6 +156,7 @@ public class OrientationFragment extends Fragment {
         mEntries1.add(new Entry(0,0));
         mEntries2.add(new Entry(0,0));
         mEntries3.add(new Entry(0,0));
+        mLineChart.setAutoScaleMinMaxEnabled(true);
 
         Description description = new Description();
         description.setText("方向曲线");
@@ -137,9 +164,40 @@ public class OrientationFragment extends Fragment {
         XAxis myX = mLineChart.getXAxis();
         myX.setDrawGridLines(false);
         myX.setGridLineWidth(10);
-        myX.setEnabled(true);
+        myX.setGranularity(10f);
         myX.setPosition(XAxis.XAxisPosition.BOTTOM);
+        myX.setEnabled(true);
         myX.setDrawLabels(false);
+        myX.setAxisMinimum(10);
+
+        LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
+        dataSetX.setColor(Color.RED);
+        dataSetX.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSetX.setCubicIntensity(0.1f);
+        dataSetX.setDrawCircles(false);
+        //dataSetX.setDrawValues(false);
+
+        LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
+        dataSetY.setColor(Color.BLUE);
+        dataSetY.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSetY.setCubicIntensity(0.1f);
+        dataSetY.setDrawCircles(false);
+        //dataSetY.setDrawValues(false);
+
+        LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
+        dataSetZ.setColor(Color.DKGRAY);
+        dataSetZ.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSetZ.setCubicIntensity(0.1f);
+        dataSetZ.setDrawCircles(false);
+        //dataSetZ.setDrawValues(false);
+
+        List<ILineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(dataSetX);
+        dataSets.add(dataSetY);
+        dataSets.add(dataSetZ);
+        LineData lineData = new LineData(dataSets);
+        mLineChart.setData(lineData);
+        mLineChart.invalidate();
 
         sm = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         Sensor magneticSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
@@ -149,6 +207,7 @@ public class OrientationFragment extends Fragment {
     @Override
     public void onDestroy() {
         sm.unregisterListener(mListener);
+        sm = null;
         super.onDestroy();
     }
 

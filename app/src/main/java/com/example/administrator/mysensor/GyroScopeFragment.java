@@ -80,7 +80,7 @@ public class GyroScopeFragment extends Fragment {
             if (currentTime - lastTime > 1000) {
                 mTextView.setText(sb);
 
-                if (mEntries1.size() > 10) {
+                /*if (mEntries1.size() > 10) {
                     mEntries1.remove(0);
                     mEntries2.remove(0);
                     mEntries3.remove(0);
@@ -106,6 +106,59 @@ public class GyroScopeFragment extends Fragment {
                 LineData lineData = new LineData(dataSets);
                 mLineChart.setData(lineData);
                 mLineChart.invalidate();
+                lastTime = currentTime;
+                CURRENT_OFFSET += WIDTH;*/
+
+                if (mEntries1.size() > 10) {
+                    mEntries1.remove(0);
+                    mEntries2.remove(0);
+                    mEntries3.remove(0);
+
+
+                    mLineChart.getXAxis().setAxisMinimum(mEntries1.get(1).getX());
+                }
+
+                mEntries1.add(new Entry(CURRENT_OFFSET, xValue));
+                mEntries2.add(new Entry(CURRENT_OFFSET, yValue));
+                mEntries3.add(new Entry(CURRENT_OFFSET, zValue));
+
+                if (mLineChart.getLineData() != null && mLineChart.getLineData().getDataSetCount() > 0) {
+                    LineDataSet dataSetX = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(0);
+                    LineDataSet dataSetY = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(1);
+                    LineDataSet dataSetZ = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(2);
+
+                    dataSetX.setValues(mEntries1);
+                    dataSetY.setValues(mEntries2);
+                    dataSetZ.setValues(mEntries3);
+
+                    mLineChart.getLineData().notifyDataChanged();
+                    mLineChart.notifyDataSetChanged();
+                    mLineChart.invalidate();
+                }else{
+                    LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
+                    dataSetX.setColor(Color.RED);
+                    dataSetX.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                    dataSetX.setCubicIntensity(0.1f);
+                    dataSetX.setDrawCircles(false);
+                    LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
+                    dataSetY.setColor(Color.BLUE);
+                    dataSetY.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                    dataSetY.setCubicIntensity(0.1f);
+                    dataSetY.setDrawCircles(false);
+                    LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
+                    dataSetZ.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                    dataSetZ.setCubicIntensity(0.1f);
+                    dataSetZ.setDrawCircles(false);
+                    List<ILineDataSet> dataSets = new ArrayList<>();
+                    dataSets.add(dataSetX);
+                    dataSets.add(dataSetY);
+                    dataSets.add(dataSetZ);
+                    LineData lineData = new LineData(dataSets);
+                    mLineChart.setData(lineData);
+                    mLineChart.moveViewToX(CURRENT_OFFSET);
+                    mLineChart.invalidate();
+                }
+
                 lastTime = currentTime;
                 CURRENT_OFFSET += WIDTH;
             }
@@ -150,23 +203,7 @@ public class GyroScopeFragment extends Fragment {
         mEntries1.add(new Entry(0,0));
         mEntries2.add(new Entry(0,0));
         mEntries3.add(new Entry(0,0));
-
-        LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
-        dataSetX.setColor(Color.RED);
-        dataSetX.setCircleColor(Color.RED);
-        LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
-        dataSetY.setColor(Color.BLUE);
-        dataSetY.setCircleColor(Color.BLUE);
-        LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
-        dataSetZ.setColor(Color.parseColor("#7fd919"));
-        dataSetZ.setCircleColor(Color.parseColor("#7fd919"));
-        List<ILineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(dataSetX);
-        dataSets.add(dataSetY);
-        dataSets.add(dataSetZ);
-        LineData lineData = new LineData(dataSets);
-        mLineChart.setData(lineData);
-        mLineChart.invalidate();
+        mLineChart.setAutoScaleMinMaxEnabled(true);
 
         Description description = new Description();
         description.setText("陀螺仪曲线图");
@@ -177,6 +214,37 @@ public class GyroScopeFragment extends Fragment {
         myX.setEnabled(true);
         myX.setPosition(XAxis.XAxisPosition.BOTTOM);
         myX.setDrawLabels(false);
+
+        LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
+        dataSetX.setColor(Color.RED);
+        dataSetX.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSetX.setCubicIntensity(0.1f);
+        dataSetX.setDrawCircles(false);
+        dataSetX.setDrawValues(false);
+
+        LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
+        dataSetY.setColor(Color.BLUE);
+        dataSetY.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSetY.setCubicIntensity(0.1f);
+        dataSetY.setDrawCircles(false);
+        dataSetY.setDrawValues(false);
+
+        LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
+        dataSetZ.setColor(Color.DKGRAY);
+        dataSetZ.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSetZ.setCubicIntensity(0.1f);
+        dataSetZ.setDrawCircles(false);
+        dataSetZ.setDrawValues(false);
+
+        List<ILineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(dataSetX);
+        dataSets.add(dataSetY);
+        dataSets.add(dataSetZ);
+        LineData lineData = new LineData(dataSets);
+        mLineChart.setData(lineData);
+        mLineChart.invalidate();
+
+
     }
 
     @Override

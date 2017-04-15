@@ -1,5 +1,6 @@
 package com.example.administrator.mysensor;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,16 +9,24 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.READ_PHONE_STATE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,12 +38,15 @@ public class MainActivity extends AppCompatActivity {
     public static final int SOUND = 5;
     public static final int GPS = 6;
 
+    private int currentPosition = 0;
+
     private TabLayout mTabLayout;
     private FragmentManager fm = getSupportFragmentManager();
     private FragmentTransaction ft;
 
     //用于监听电源键长按
     MyReceiver myReceiver;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setFragment(int position) {
+        currentPosition = position;
         switch (position) {
             case LIGHT:
                 LightFragment lightFragment = LightFragment.newInstance();
@@ -132,32 +145,81 @@ public class MainActivity extends AppCompatActivity {
                 ft.commit();
                 break;
             case SOUND:
-                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                         tryRequestPermission(Manifest.permission.RECORD_AUDIO);
                     } else {
-                        setFrag();
+                        setSoundFrag();
                     }
                 } else {
-                    setFrag();
-                }*/
+                    setSoundFrag();
+                }
 
-                BlankFragment blankFragment = BlankFragment.newInstance("arg1","arg2");
+               /* BlankFragment blankFragment = BlankFragment.newInstance();
                 ft = fm.beginTransaction();
                 ft.replace(R.id.container, blankFragment);
-                ft.commit();
+                ft.commit();*/
                 break;
             case GPS:
-                BlankFragment blankFragment1 = BlankFragment.newInstance("arg1","arg2");
-                ft = fm.beginTransaction();
-                ft.replace(R.id.container, blankFragment1);
-                ft.commit();
+
+                List<String> permissionList = new ArrayList<>();
+                if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    permissionList.add(ACCESS_FINE_LOCATION);
+                }
+                if (ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ) {
+                    permissionList.add(READ_PHONE_STATE);
+                }
+                if (ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    permissionList.add(WRITE_EXTERNAL_STORAGE);
+                }
+
+                if (!permissionList.isEmpty()) {
+                    final String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+                    if (shouldShowTips()) {
+                        AlertDialog dialog = new AlertDialog.Builder(this)
+                                .setTitle("缺少权限")
+                                .setMessage("APP需要定位权限来获取位置信息!")
+                                .setPositiveButton("授予", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        ActivityCompat.requestPermissions(MainActivity.this, permissions, 1);
+                                    }
+                                })
+                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                })
+                                .create();
+                        dialog.show();
+                    } else {
+                        ActivityCompat.requestPermissions(this, permissions, 1);
+                    }
+                } else {
+                    setGPSFrag();
+                }
                 break;
 
         }
     }
 
-    private void setFrag() {
+    private boolean shouldShowTips() {
+        return ActivityCompat.shouldShowRequestPermissionRationale(this, ACCESS_FINE_LOCATION)
+                || ActivityCompat.shouldShowRequestPermissionRationale(this, WRITE_EXTERNAL_STORAGE)
+                || ActivityCompat.shouldShowRequestPermissionRationale(this, READ_PHONE_STATE);
+    }
+
+
+
+    private void setGPSFrag() {
+        GPSFragment gpsFragment = GPSFragment.newInstance();
+        ft = fm.beginTransaction();
+        ft.replace(R.id.container, gpsFragment);
+        ft.commitAllowingStateLoss();
+    }
+
+    private void setSoundFrag() {
         SoundFragment soundFragment = SoundFragment.newInstance();
         ft = fm.beginTransaction();
         ft.replace(R.id.container, soundFragment);
@@ -167,25 +229,27 @@ public class MainActivity extends AppCompatActivity {
     public void tryRequestPermission(final String permission) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (shouldShowRequestPermissionRationale(permission)) {
-                AlertDialog dialog = new AlertDialog.Builder(this)
-                        .setTitle("缺少权限")
-                        .setMessage("APP需要录音权限来获取分贝值!")
-                        .setPositiveButton("授予", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    requestPermissions(new String[]{permission}, 0);
+                if (permission.equals(Manifest.permission.RECORD_AUDIO)) {
+                    AlertDialog dialog = new AlertDialog.Builder(this)
+                            .setTitle("缺少权限")
+                            .setMessage("APP需要录音权限来获取分贝值!")
+                            .setPositiveButton("授予", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        requestPermissions(new String[]{permission}, 0);
+                                    }
                                 }
-                            }
-                        })
-                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                finish();
-                            }
-                        })
-                        .create();
-                dialog.show();
+                            })
+                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            })
+                            .create();
+                    dialog.show();
+                }
             } else {
                 requestPermissions(new String[]{permission}, 0);
             }
@@ -193,14 +257,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        Log.d("MainActivity", "onSave");
-        super.onSaveInstanceState(outState, outPersistentState);
-    }
-
-    @Override
     protected void onPostResume() {
-        Log.d("MainActivity","onPostResume");
+        Log.d("MainActivity", "onPostResume");
         super.onPostResume();
     }
 
@@ -209,14 +267,50 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 0) {
             if (grantResults.length > 0) {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "权限获取成功！", Toast.LENGTH_SHORT).show();
-                    setFrag();
-                } else {
-                    finish();
+                if (permissions[0].equals(Manifest.permission.RECORD_AUDIO)) {
+                    if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, "权限获取成功！", Toast.LENGTH_SHORT).show();
+                        setSoundFrag();
+                    } else {
+                        finish();
+                    }
                 }
+            } else {
+                Toast.makeText(this, "发生未知错误！", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
+        } else if(requestCode == 1){
+            if(grantResults.length >0){
+                for(int result:grantResults){
+                    if(result != PackageManager.PERMISSION_GRANTED){
+                        Toast.makeText(this, "必须要有相应权限才能获取位置信息！", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
+                }
+                setGPSFrag();
+            } else {
+                Toast.makeText(this, "发生未知错误！", Toast.LENGTH_SHORT).show();
+                finish();
             }
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Log.d("MainActivity", "onSave");
+        outState.putInt("position", currentPosition);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        Log.d("MainActivity", "onRestore");
+        super.onRestoreInstanceState(savedInstanceState);
+        int position = savedInstanceState.getInt("position");
+        setFragment(position);
+        mTabLayout.setScrollPosition(position, 0, true);
     }
 
     @Override

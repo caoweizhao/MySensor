@@ -119,22 +119,22 @@ public class MagneticFragment extends Fragment {
                     mLineChart.notifyDataSetChanged();
                     mLineChart.invalidate();
                 }else{
-                    Log.d("AccelerateFragment","else");
-
                     LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
                     dataSetX.setColor(Color.RED);
                     dataSetX.setMode(LineDataSet.Mode.CUBIC_BEZIER);
                     dataSetX.setCubicIntensity(0.1f);
-                    dataSetX.setDrawCircles(false);
+                    //dataSetX.setDrawCircles(false);
                     LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
                     dataSetY.setColor(Color.BLUE);
                     dataSetY.setMode(LineDataSet.Mode.CUBIC_BEZIER);
                     dataSetY.setCubicIntensity(0.1f);
-                    dataSetY.setDrawCircles(false);
+                    //dataSetY.setDrawCircles(false);
                     LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
+                    dataSetZ.setColor(Color.GRAY);
                     dataSetZ.setMode(LineDataSet.Mode.CUBIC_BEZIER);
                     dataSetZ.setCubicIntensity(0.1f);
-                    dataSetZ.setDrawCircles(false);
+                    //dataSetZ.setDrawCircles(false);
+
                     List<ILineDataSet> dataSets = new ArrayList<>();
                     dataSets.add(dataSetX);
                     dataSets.add(dataSetY);
