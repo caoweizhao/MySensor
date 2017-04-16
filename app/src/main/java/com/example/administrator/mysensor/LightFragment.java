@@ -40,7 +40,7 @@ public class LightFragment extends Fragment {
     List<Entry> mEntries = new ArrayList<>();
 
     private static final int WIDTH = 10;
-    private int CURRENT_OFFSET = 0;
+    private int CURRENT_OFFSET = 10;
 
     private SensorEventListener mListener = new SensorEventListener() {
         @Override
@@ -52,6 +52,7 @@ public class LightFragment extends Fragment {
             LineDataSet dataSet = (LineDataSet) data.getDataSetByIndex(0);
             if (dataSet.getEntryCount() > 10) {
                 dataSet.removeEntry(0);
+
             }
             dataSet.addEntry(new Entry(CURRENT_OFFSET, level));
 
@@ -103,6 +104,7 @@ public class LightFragment extends Fragment {
 
     private void initChart() {
 
+        mEntries.add(new Entry(0, 0));
         mLineChart.getAxisLeft().setAxisMinimum(-1);
         mLineChart.getAxisRight().setAxisMinimum(-1);
         XAxis myX = mLineChart.getXAxis();
