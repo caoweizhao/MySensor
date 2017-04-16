@@ -1,7 +1,6 @@
 package com.example.administrator.mysensor;
 
 import android.graphics.Color;
-import android.hardware.SensorManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -33,9 +32,8 @@ public class SoundFragment extends Fragment {
 
     LineChart mLineChart;
     TextView mTextView;
-    SensorManager sm;
     AudioRecordDemo myRecordDemo;
-    private static int CURRENT_OFFSET = 10;
+    private int CURRENT_OFFSET = 10;
 
     public static SoundFragment newInstance() {
         SoundFragment lightFragment = new SoundFragment();

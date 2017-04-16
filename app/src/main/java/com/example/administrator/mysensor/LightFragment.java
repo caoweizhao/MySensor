@@ -40,7 +40,7 @@ public class LightFragment extends Fragment {
     List<Entry> mEntries = new ArrayList<>();
 
     private static final int WIDTH = 10;
-    private static int CURRENT_OFFSET = 0;
+    private int CURRENT_OFFSET = 0;
 
     private SensorEventListener mListener = new SensorEventListener() {
         @Override

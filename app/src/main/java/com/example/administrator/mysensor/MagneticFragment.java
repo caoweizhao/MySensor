@@ -41,7 +41,7 @@ public class MagneticFragment extends Fragment {
     private long lastTime;
 
     private static final int WIDTH = 10;
-    private static int CURRENT_OFFSET = 10;
+    private int CURRENT_OFFSET = 10;
     private SensorEventListener mListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {

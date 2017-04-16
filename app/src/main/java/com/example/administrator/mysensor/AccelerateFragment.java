@@ -42,7 +42,7 @@ public class AccelerateFragment extends Fragment {
     List<Entry> mEntries3 = new ArrayList<>();
 
     private static final int WIDTH = 10;
-    private static int CURRENT_OFFSET = 10;
+    private int CURRENT_OFFSET = 10;
 
     private long lastTime;
     public SensorEventListener mListener = new SensorEventListener() {
@@ -115,13 +115,13 @@ public class AccelerateFragment extends Fragment {
                     mEntries3.remove(0);
 
 
-                    mLineChart.getXAxis().setAxisMinimum(mEntries1.get(1).getX());
+                    mLineChart.getXAxis().setAxisMinimum(mEntries1.get(0).getX());
                 }
 
                 mEntries1.add(new Entry(CURRENT_OFFSET, x));
                 mEntries2.add(new Entry(CURRENT_OFFSET, y));
                 mEntries3.add(new Entry(CURRENT_OFFSET, z));
-                
+
                 if (mLineChart.getLineData() != null && mLineChart.getLineData().getDataSetCount() > 0) {
                     LineDataSet dataSetX = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(0);
                     LineDataSet dataSetY = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(1);
@@ -134,9 +134,9 @@ public class AccelerateFragment extends Fragment {
                     mLineChart.getLineData().notifyDataChanged();
                     mLineChart.notifyDataSetChanged();
                     mLineChart.invalidate();
-                }else{
-                    Log.d("AccelerateFragment","else");
-                    
+                } else {
+                    Log.d("AccelerateFragment", "else");
+
                     LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
                     dataSetX.setColor(Color.RED);
                     dataSetX.setMode(LineDataSet.Mode.CUBIC_BEZIER);
@@ -205,7 +205,6 @@ public class AccelerateFragment extends Fragment {
         mEntries1.add(new Entry(0, 0));
         mEntries2.add(new Entry(0, 0));
         mEntries3.add(new Entry(0, 0));
-        mLineChart.setAutoScaleMinMaxEnabled(true);
 
         Description description = new Description();
         description.setText("加速度曲线图");
@@ -216,7 +215,7 @@ public class AccelerateFragment extends Fragment {
         myX.setGranularity(10f);
         myX.setPosition(XAxis.XAxisPosition.BOTTOM);
         myX.setEnabled(true);
-        myX.setDrawLabels(false);
+        //myX.setDrawLabels(false);
         myX.setAxisMinimum(10);
 
         LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
@@ -247,11 +246,15 @@ public class AccelerateFragment extends Fragment {
         LineData lineData = new LineData(dataSets);
         mLineChart.setData(lineData);
         mLineChart.invalidate();
+
+        mLineChart.setAutoScaleMinMaxEnabled(true);
+
     }
 
     @Override
     public void onDestroy() {
         sm.unregisterListener(mListener);
+        mLineChart.clear();
         super.onDestroy();
     }
 }

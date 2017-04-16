@@ -40,7 +40,7 @@ public class OrientationFragment extends Fragment {
     List<Entry> mEntries3 = new ArrayList<>();
 
     private static final int WIDTH = 10;
-    private static int CURRENT_OFFSET = 10;
+    private int CURRENT_OFFSET = 10;
 
     private long lastTime;
     public SensorEventListener mListener = new SensorEventListener() {
