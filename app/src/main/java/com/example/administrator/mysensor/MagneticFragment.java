@@ -63,42 +63,10 @@ public class MagneticFragment extends Fragment {
             if (currentTime - lastTime > 1000) {
                 mTextView.setText(sb);
 
-                /*if (mEntries1.size() > 10) {
-                    mEntries1.remove(0);
-                    mEntries2.remove(0);
-                    mEntries3.remove(0);
-                }
-
-                mEntries1.add(new Entry(CURRENT_OFFSET, xValue));
-                mEntries2.add(new Entry(CURRENT_OFFSET, yValue));
-                mEntries3.add(new Entry(CURRENT_OFFSET, zValue));
-
-                LineDataSet dataSetX = new LineDataSet(mEntries1, "X");
-                dataSetX.setColor(Color.RED);
-                dataSetX.setCircleColor(Color.RED);
-                LineDataSet dataSetY = new LineDataSet(mEntries2, "Y");
-                dataSetY.setColor(Color.BLUE);
-                dataSetY.setCircleColor(Color.BLUE);
-                LineDataSet dataSetZ = new LineDataSet(mEntries3, "Z");
-                dataSetZ.setColor(Color.parseColor("#7fd919"));
-                dataSetZ.setCircleColor(Color.parseColor("#7fd919"));
-                List<ILineDataSet> dataSets = new ArrayList<>();
-                dataSets.add(dataSetX);
-                dataSets.add(dataSetY);
-                dataSets.add(dataSetZ);
-                LineData lineData = new LineData(dataSets);
-                mLineChart.setData(lineData);
-                mLineChart.invalidate();
-                lastTime = currentTime;
-                CURRENT_OFFSET += WIDTH;*/
-
-
                 if (mEntries1.size() > 10) {
                     mEntries1.remove(0);
                     mEntries2.remove(0);
                     mEntries3.remove(0);
-
-
                     mLineChart.getXAxis().setAxisMinimum(mEntries1.get(1).getX());
                 }
 

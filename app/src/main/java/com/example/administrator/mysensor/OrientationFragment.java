@@ -75,8 +75,6 @@ public class OrientationFragment extends Fragment {
                     mEntries1.remove(0);
                     mEntries2.remove(0);
                     mEntries3.remove(0);
-
-
                     mLineChart.getXAxis().setAxisMinimum(mEntries1.get(1).getX());
                 }
 
