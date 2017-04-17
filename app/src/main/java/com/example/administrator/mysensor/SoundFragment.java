@@ -123,7 +123,6 @@ public class SoundFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        Log.d("LightFragment", "onDestroyView");
         myRecordDemo.stopRecord();
         super.onDestroyView();
     }

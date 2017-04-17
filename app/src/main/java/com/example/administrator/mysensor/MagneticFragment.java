@@ -134,7 +134,6 @@ public class MagneticFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onCreateView");
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
         mLineChart = (LineChart) view.findViewById(R.id.chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
@@ -143,7 +142,6 @@ public class MagneticFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         initChart();
         initSensor();
@@ -215,41 +213,5 @@ public class MagneticFragment extends Fragment {
         sm.unregisterListener(mListener);
         Log.d("LightFragment", "onDestroy");
         super.onDestroy();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "oncreate");
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onResume() {
-        Log.d("LightFragment", "onResume");
-        super.onResume();
-    }
-
-    @Override
-    public void onStart() {
-        Log.d("LightFragment", "onStart");
-        super.onStart();
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onActivityCreated");
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
-    public void onPause() {
-        Log.d("LightFragment", "onPause");
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        Log.d("LightFragment", "onStop");
-        super.onStop();
     }
 }

@@ -337,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        Log.d("MainActivity", "onSave");
         outState.putInt("position", currentPosition);
         super.onSaveInstanceState(outState);
     }
@@ -349,7 +348,6 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d("MainActivity", "onRestore");
         super.onRestoreInstanceState(savedInstanceState);
         int position = savedInstanceState.getInt("position");
         setFragment(position);
