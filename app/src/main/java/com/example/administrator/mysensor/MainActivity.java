@@ -369,10 +369,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_DOWN:
-                Toast.makeText(this, "音量键下触发", Toast.LENGTH_SHORT).show();
+                SnackBarUtil.showSnackBar(mTabLayout,"音量键下触发！");
                 return true;
             case KeyEvent.KEYCODE_VOLUME_UP:
-                Toast.makeText(this, "音量键上触发", Toast.LENGTH_SHORT).show();
+                SnackBarUtil.showSnackBar(mTabLayout,"音量键上触发！");
                 return true;
             default:
                 return super.onKeyDown(keyCode, event);
@@ -385,10 +385,12 @@ public class MainActivity extends AppCompatActivity {
     public class MyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            context.sendOrderedBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS),null);
             String data = intent.getStringExtra("reason");
             //电源长按的字符串为“globalactions”
             if (data != null && data.equals("globalactions")) {
-                Toast.makeText(context, "电源键长按", Toast.LENGTH_SHORT).show();
+                SnackBarUtil.showSnackBar(mTabLayout,"电源键长按！");
+                myReceiver.abortBroadcast();
             }
         }
     }
