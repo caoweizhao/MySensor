@@ -32,8 +32,22 @@ public class SoundFragment extends Fragment {
 
     LineChart mLineChart;
     TextView mTextView;
+    /**
+     * 用户录音获取分贝值
+     */
     AudioRecordDemo myRecordDemo;
+    /**
+     * 点的X轴间距
+     */
+    private static final int WIDTH = 10;
+    /**
+     * 当前点的X坐标
+     */
     private int CURRENT_OFFSET = 10;
+    /**
+     * 点集
+     */
+    private List<Entry> mEntries = new ArrayList<>();
 
     public static SoundFragment newInstance() {
         SoundFragment lightFragment = new SoundFragment();
@@ -46,7 +60,6 @@ public class SoundFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onCraeteView");
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
         mLineChart = (LineChart) view.findViewById(R.id.chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
@@ -55,20 +68,19 @@ public class SoundFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
-        Description description = new Description();
-        description.setText("分贝曲线图");
-        mLineChart.setDescription(description);
-        LineData lineData = new LineData();
-        List<Entry> entries = new ArrayList<>();
-        entries.add(new Entry(0, 0));
-        LineDataSet dataSet = new LineDataSet(entries, "分贝曲线");
-        lineData.addDataSet(dataSet);
-        mLineChart.setData(lineData);
-        mLineChart.invalidate();
-        mLineChart.setAutoScaleMinMaxEnabled(true);
+        initChart();
+        myRecordDemo = new AudioRecordDemo();
+        myRecordDemo.getNoiseLevel();
+    }
 
+    /**
+     * 初始化图表
+     */
+    private void initChart() {
+        mEntries.add(new Entry(0, 0));
+        mLineChart.getAxisLeft().setAxisMinimum(0);
+        mLineChart.getAxisRight().setAxisMinimum(0);
         XAxis myX = mLineChart.getXAxis();
         myX.setDrawGridLines(false);
         myX.setGridLineWidth(10);
@@ -77,8 +89,36 @@ public class SoundFragment extends Fragment {
         myX.setEnabled(true);
         myX.setDrawLabels(false);
 
-        myRecordDemo = new AudioRecordDemo();
-        myRecordDemo.getNoiseLevel();
+
+
+        /*Matrix matrix = new Matrix();
+        //x轴缩放1.5倍
+        matrix.postScale(1.5f, 1f);
+        //在图表动画显示之前进行缩放
+        mLineChart.getViewPortHandler().refresh(matrix, mLineChart, false);
+        //x轴执行动画
+        mLineChart.animateX(2000);*/
+
+        Description description = new Description();
+        description.setText("分贝曲线图");
+        mLineChart.setDescription(description);
+        LineData lineData = new LineData();
+        LineDataSet dataSet = new LineDataSet(mEntries, "分贝曲线");
+
+
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet.setCubicIntensity(0.1f);
+        dataSet.setDrawCircles(false);
+        dataSet.setColor(Color.BLUE);
+
+        dataSet.setDrawFilled(true);
+        dataSet.setFillColor(Color.GRAY);
+        dataSet.setFillAlpha(128);
+
+        lineData.addDataSet(dataSet);
+        mLineChart.setData(lineData);
+        mLineChart.invalidate();
+        mLineChart.setAutoScaleMinMaxEnabled(true);
     }
 
     @Override
@@ -88,49 +128,10 @@ public class SoundFragment extends Fragment {
         super.onDestroyView();
     }
 
-    @Override
-    public void onDestroy() {
-        Log.d("LightFragment", "onDestroy");
-        super.onDestroy();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "oncreate");
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onResume() {
-        Log.d("LightFragment", "onResume");
-        super.onResume();
-    }
-
-    @Override
-    public void onStart() {
-        Log.d("LightFragment", "onStart");
-        super.onStart();
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onActivityCreated");
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
-    public void onPause() {
-        Log.d("LightFragment", "onPause");
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        Log.d("LightFragment", "onStop");
-        super.onStop();
-    }
-
-    class AudioRecordDemo {
+    /**
+     * 录音获取分贝值
+     */
+    private class AudioRecordDemo {
         private Runnable mRunnable = new Runnable() {
             @Override
             public void run() {
@@ -147,31 +148,29 @@ public class SoundFragment extends Fragment {
                     // 平方和除以数据总长度，得到音量大小。
                     double mean = v / (double) r;
                     double volume = 10 * Math.log10(mean);
-                    DecimalFormat df = new DecimalFormat("##.###");
+                    DecimalFormat df = new DecimalFormat("##.###"); //设置解析格式
                     final double value = Double.parseDouble(df.format(volume));
 
                     mTextView.post(new Runnable() {
                         @Override
                         public void run() {
                             mTextView.setText(new StringBuilder("当前分贝值为：").append(value).append(Unit.SOUND_UNIT));
-                            LineData data = mLineChart.getData();
-                            if (data == null) {
-                                data = new LineData();
-                            }
-                            LineDataSet dataSet = (LineDataSet) data.getDataSetByIndex(0);
-                            if (dataSet == null) {
-                                dataSet = new LineDataSet(null, "分贝值");
-                            }
 
+                            //更新图标数据
+                            LineData data = mLineChart.getData();
+                            LineDataSet dataSet = (LineDataSet) data.getDataSetByIndex(0);
                             if (dataSet.getEntryCount() > 10) {
                                 dataSet.removeEntry(0);
                             }
                             dataSet.addEntry(new Entry(CURRENT_OFFSET, (float) value));
-                            dataSet.setCircleColor(Color.BLUE);
-                            dataSet.setColor(Color.BLUE);
+
                             dataSet.notifyDataSetChanged();
                             data.notifyDataChanged();
-                            mLineChart.invalidate();
+                            mLineChart.moveViewToX(CURRENT_OFFSET);
+                            mLineChart.notifyDataSetChanged();
+                            //mLineChart.setVisibleXRangeMaximum(120);
+                            // mLineChart.invalidate();
+                            CURRENT_OFFSET += WIDTH;
                         }
                     });
 
@@ -185,7 +184,7 @@ public class SoundFragment extends Fragment {
                         }
                     }
                 }
-                Log.d("AudioRecordDemo","quit record!");
+                Log.d("AudioRecordDemo", "quit record!");
                 mAudioRecord.stop();
                 mAudioRecord.release();
                 mAudioRecord = null;
@@ -202,6 +201,7 @@ public class SoundFragment extends Fragment {
                 SAMPLE_RATE_IN_HZ, AudioFormat.CHANNEL_IN_DEFAULT,
                 AudioFormat.ENCODING_PCM_16BIT, BUFFER_SIZE);
         boolean isGetVoiceRun;
+        //用于线程延时
         Object mLock;
 
         public AudioRecordDemo() {

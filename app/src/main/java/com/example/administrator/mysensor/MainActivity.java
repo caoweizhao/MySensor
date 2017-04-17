@@ -21,6 +21,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
+import com.baidu.mapapi.SDKInitializer;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +40,10 @@ public class MainActivity extends AppCompatActivity {
     public static final int SOUND = 5;
     public static final int GPS = 6;
 
-    private int currentPosition = 0;
+    /**
+     * 标志当前Fragment位置
+     */
+    private int currentPosition = -1;
 
     private TabLayout mTabLayout;
     private FragmentManager fm = getSupportFragmentManager();
@@ -47,14 +52,15 @@ public class MainActivity extends AppCompatActivity {
     //用于监听电源键长按
     MyReceiver myReceiver;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //百度地图服务初始化
+        SDKInitializer.initialize(this.getApplicationContext());
         setContentView(R.layout.activity_main2);
+        //初始化监听电源键长按的广播
         initBroadcastReceiver();
-
-        mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        //初始化TabLayout
         initTabLayout();
     }
 
@@ -68,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
     //初始化TabLayout
     private void initTabLayout() {
+        mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
         TabLayout.Tab tab1 = mTabLayout.newTab();
         tab1.setText("光照");
         TabLayout.Tab tab2 = mTabLayout.newTab();
@@ -107,11 +114,19 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        // 默认跳转到第0页
         mTabLayout.setScrollPosition(0, 0, true);
         setFragment(0);
     }
 
+    /**
+     * 切换页面
+     * @param position
+     */
     private void setFragment(int position) {
+        if (currentPosition == position) {
+            return;
+        }
         currentPosition = position;
         switch (position) {
             case LIGHT:
@@ -161,12 +176,12 @@ public class MainActivity extends AppCompatActivity {
                 ft.commit();*/
                 break;
             case GPS:
-
+                //检查相应权限，获取之后才能设置页面
                 List<String> permissionList = new ArrayList<>();
                 if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     permissionList.add(ACCESS_FINE_LOCATION);
                 }
-                if (ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ) {
+                if (ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                     permissionList.add(READ_PHONE_STATE);
                 }
                 if (ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -197,35 +212,49 @@ public class MainActivity extends AppCompatActivity {
                         ActivityCompat.requestPermissions(this, permissions, 1);
                     }
                 } else {
+                    //已拥有权限,直接设置页面
                     setGPSFrag();
                 }
                 break;
-
         }
     }
 
+    /**
+     * 判断是否需要显示权限提示（地图相关权限）
+     *
+     * @return
+     */
     private boolean shouldShowTips() {
         return ActivityCompat.shouldShowRequestPermissionRationale(this, ACCESS_FINE_LOCATION)
                 || ActivityCompat.shouldShowRequestPermissionRationale(this, WRITE_EXTERNAL_STORAGE)
                 || ActivityCompat.shouldShowRequestPermissionRationale(this, READ_PHONE_STATE);
     }
 
-
-
+    /**
+     * 设置GPS页面
+     */
     private void setGPSFrag() {
         GPSFragment gpsFragment = GPSFragment.newInstance();
         ft = fm.beginTransaction();
         ft.replace(R.id.container, gpsFragment);
-        ft.commitAllowingStateLoss();
+        ft.commitAllowingStateLoss();   //允许状态丢失
     }
 
+    /**
+     * 设置Sound页面
+     */
     private void setSoundFrag() {
         SoundFragment soundFragment = SoundFragment.newInstance();
         ft = fm.beginTransaction();
         ft.replace(R.id.container, soundFragment);
-        ft.commitAllowingStateLoss();
+        ft.commitAllowingStateLoss();   //允许状态丢失
     }
 
+    /**
+     * 获取录音权限
+     *
+     * @param permission 请求权限名
+     */
     public void tryRequestPermission(final String permission) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (shouldShowRequestPermissionRationale(permission)) {
@@ -256,15 +285,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onPostResume() {
-        Log.d("MainActivity", "onPostResume");
-        super.onPostResume();
-    }
-
+    /**
+     * 权限获取回调
+     *
+     * @param requestCode  请求码
+     * @param permissions  请求权限列表
+     * @param grantResults 权限授予结果
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        //录音权限回调
         if (requestCode == 0) {
             if (grantResults.length > 0) {
                 if (permissions[0].equals(Manifest.permission.RECORD_AUDIO)) {
@@ -280,10 +311,12 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
 
-        } else if(requestCode == 1){
-            if(grantResults.length >0){
-                for(int result:grantResults){
-                    if(result != PackageManager.PERMISSION_GRANTED){
+        }
+        //GPS权限回调
+        else if (requestCode == 1) {
+            if (grantResults.length > 0) {
+                for (int result : grantResults) {
+                    if (result != PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "必须要有相应权限才能获取位置信息！", Toast.LENGTH_SHORT).show();
                         finish();
                         return;
@@ -297,6 +330,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 保存状态回调，用于切换屏幕方向时保存当前的Fragment的位置
+     *
+     * @param outState
+     */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         Log.d("MainActivity", "onSave");
@@ -304,6 +342,11 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * 恢复状态回调，用户切换屏幕方向时恢复当前的Fragment的位置
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         Log.d("MainActivity", "onRestore");
@@ -319,6 +362,9 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    /**
+     * 监听物理按键（音量上下键）
+     */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
@@ -340,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String data = intent.getStringExtra("reason");
+            //电源长按的字符串为“globalactions”
             if (data != null && data.equals("globalactions")) {
                 Toast.makeText(context, "电源键长按", Toast.LENGTH_SHORT).show();
             }

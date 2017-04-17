@@ -9,7 +9,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,16 +32,39 @@ import static com.example.administrator.mysensor.R.id.chart;
 
 public class LightFragment extends Fragment {
 
+    /**
+     * 图表实例
+     */
     LineChart mLineChart;
+    /**
+     * 描述信息
+     */
     TextView mTextView;
+    /**
+     * 传感器管理类
+     */
     SensorManager sm;
 
+    /**
+     * 坐标集
+     */
     List<Entry> mEntries = new ArrayList<>();
-
+    /**
+     * 点的X轴间距
+     */
     private static final int WIDTH = 10;
+    /**
+     * 当前点的X坐标
+     */
     private int CURRENT_OFFSET = 10;
-
+    /**
+     * 传感器监听器
+     */
     private SensorEventListener mListener = new SensorEventListener() {
+        /**
+         * 传感器事件回调
+         * @param event
+         */
         @Override
         public void onSensorChanged(SensorEvent event) {
             float level = event.values[0];
@@ -81,7 +103,6 @@ public class LightFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onCraeteView");
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
         mLineChart = (LineChart) view.findViewById(chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
@@ -90,18 +111,23 @@ public class LightFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         initChart();
         initSensor();
     }
 
+    /**
+     * 初始化传感器
+     */
     private void initSensor() {
         sm = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         Sensor lightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
         sm.registerListener(mListener, lightSensor, SensorManager.SENSOR_DELAY_UI);
     }
 
+    /**
+     * 初始化图表
+     */
     private void initChart() {
 
         mEntries.add(new Entry(0, 0));
@@ -111,90 +137,36 @@ public class LightFragment extends Fragment {
         myX.setDrawGridLines(false);
         myX.setGridLineWidth(10);
         myX.setGranularity(10f);
-        myX.setPosition(XAxis.XAxisPosition.BOTTOM);
+        myX.setPosition(XAxis.XAxisPosition.BOTTOM);    //设置X轴位置
         myX.setEnabled(true);
-        myX.setDrawLabels(false);
+        myX.setDrawLabels(false);   //设置是否显示X轴的值
 
-
-
-        /*Matrix matrix = new Matrix();
-        //x轴缩放1.5倍
-        matrix.postScale(1.5f, 1f);
-        //在图表动画显示之前进行缩放
-        mLineChart.getViewPortHandler().refresh(matrix, mLineChart, false);
-        //x轴执行动画
-        mLineChart.animateX(2000);*/
-
+        //设置图表描述信息
         Description description = new Description();
         description.setText("光照曲线图");
         mLineChart.setDescription(description);
+
         LineData lineData = new LineData();
         LineDataSet dataSet = new LineDataSet(mEntries, "光照曲线");
 
-
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataSet.setCubicIntensity(0.1f);
-        dataSet.setDrawCircles(false);
-        dataSet.setColor(Color.BLUE);
+        dataSet.setCubicIntensity(0.1f);    //设置平滑度
+        dataSet.setDrawCircles(false);  //设置是否显示点集中的圆圈
+        dataSet.setColor(Color.BLUE);   //设置折线颜色
 
-        dataSet.setDrawFilled(true);
-        dataSet.setFillColor(Color.GRAY);
-        dataSet.setFillAlpha(128);
+        dataSet.setDrawFilled(true);    //设置折线下方是否显示阴影
+        dataSet.setFillColor(Color.GRAY);   //设置阴影颜色
+        dataSet.setFillAlpha(128);  //设置透明度
 
         lineData.addDataSet(dataSet);
         mLineChart.setData(lineData);
         mLineChart.invalidate();
-        mLineChart.setAutoScaleMinMaxEnabled(true);
-
-
-    }
-
-    @Override
-    public void onDestroyView() {
-        Log.d("LightFragment", "onDestroyView");
-        super.onDestroyView();
+        mLineChart.setAutoScaleMinMaxEnabled(true);     //设置XY轴是否自动缩放
     }
 
     @Override
     public void onDestroy() {
         sm.unregisterListener(mListener);
-        Log.d("LightFragment", "onDestroy");
         super.onDestroy();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "oncreate");
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onResume() {
-        Log.d("LightFragment", "onResume");
-        super.onResume();
-    }
-
-    @Override
-    public void onStart() {
-        Log.d("LightFragment", "onStart");
-        super.onStart();
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        Log.d("LightFragment", "onActivityCreated");
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
-    public void onPause() {
-        Log.d("LightFragment", "onPause");
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        Log.d("LightFragment", "onStop");
-        super.onStop();
     }
 }
