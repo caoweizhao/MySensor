@@ -8,6 +8,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +22,9 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.example.administrator.mysensor.R.id.chart;
@@ -46,9 +49,14 @@ public class LightFragment extends Fragment {
     SensorManager sm;
 
     /**
-     * 坐标集
+     * 当前显示坐标集，最多十个
      */
     List<Entry> mEntries = new ArrayList<>();
+
+    /**
+     * 保存所有坐标
+     */
+    List<Entry> mEntryList = new ArrayList<>();
     /**
      * 点的X轴间距
      */
@@ -57,6 +65,9 @@ public class LightFragment extends Fragment {
      * 当前点的X坐标
      */
     private int CURRENT_OFFSET = 10;
+
+    private long lastTime;
+
     /**
      * 传感器监听器
      */
@@ -67,24 +78,31 @@ public class LightFragment extends Fragment {
          */
         @Override
         public void onSensorChanged(SensorEvent event) {
-            float level = event.values[0];
-            mTextView.setText(new StringBuilder("当前光照强度为：").append(level).append(Unit.LIGHT_UNIT));
 
-            LineData data = mLineChart.getData();
-            LineDataSet dataSet = (LineDataSet) data.getDataSetByIndex(0);
-            if (dataSet.getEntryCount() > 10) {
-                dataSet.removeEntry(0);
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastTime > 1000) {
+                float level = event.values[0];
+                mTextView.setText(new StringBuilder("当前光照强度为：").append(level).append(Unit.LIGHT_UNIT));
 
+                LineData data = mLineChart.getData();
+                LineDataSet dataSet = (LineDataSet) data.getDataSetByIndex(0);
+                if (dataSet.getEntryCount() > 10) {
+                    dataSet.removeEntry(0);
+                }
+                Entry e = new Entry(CURRENT_OFFSET, level);
+                dataSet.addEntry(e);
+                mEntryList.add(e);
+
+                dataSet.notifyDataSetChanged();
+                data.notifyDataChanged();
+                mLineChart.moveViewToX(CURRENT_OFFSET);
+                mLineChart.notifyDataSetChanged();
+                //mLineChart.setVisibleXRangeMaximum(120);
+                // mLineChart.invalidate();
+                CURRENT_OFFSET += WIDTH;
+                lastTime = currentTime;
             }
-            dataSet.addEntry(new Entry(CURRENT_OFFSET, level));
 
-            dataSet.notifyDataSetChanged();
-            data.notifyDataChanged();
-            mLineChart.moveViewToX(CURRENT_OFFSET);
-            mLineChart.notifyDataSetChanged();
-            //mLineChart.setVisibleXRangeMaximum(120);
-            // mLineChart.invalidate();
-            CURRENT_OFFSET += WIDTH;
         }
 
         @Override
@@ -106,6 +124,12 @@ public class LightFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
         mLineChart = (LineChart) view.findViewById(chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
+        view.findViewById(R.id.saveToCSV).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveToCSV();
+            }
+        });
         return view;
     }
 
@@ -168,5 +192,27 @@ public class LightFragment extends Fragment {
     public void onDestroy() {
         sm.unregisterListener(mListener);
         super.onDestroy();
+    }
+
+    public void saveToCSV() {
+        int count = mEntryList.size();
+        FileHelper.open(FileHelper.LIGHT);
+        List<List<String>> mList = new ArrayList<>();
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
+        String dateStr = sdf.format(date);
+        for (int i = 0; i < count; i++) {
+            List<String> datas = new ArrayList<>();
+            Entry entry = mEntryList.get(i);
+            datas.add(entry.getY() + "");
+            datas.add(dateStr);
+            mList.add(datas);
+        }
+        FileHelper.writeCsv(mList);
+        FileHelper.flush();
+        mList.clear();
+        mEntryList.clear();
+        Snackbar.make(mLineChart, "保存成功 " + FileHelper.mFileName, Snackbar.LENGTH_LONG).show();
+
     }
 }

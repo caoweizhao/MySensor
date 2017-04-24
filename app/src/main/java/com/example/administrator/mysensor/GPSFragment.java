@@ -4,6 +4,7 @@ package com.example.administrator.mysensor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,12 +27,19 @@ import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link GPSFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
 public class GPSFragment extends Fragment {
+
+    private List<List<String>> mInfo = new ArrayList<>();
 
     /**
      * 用于记录我的位置
@@ -86,8 +94,14 @@ public class GPSFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             final Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.gps_layout, container, false);
+        view.findViewById(R.id.saveToCSV).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveToCSV();
+            }
+        });
         mTextView = (TextView) view.findViewById(R.id.gps_text_view);
         navToMyLocation = (FloatingActionButton) view.findViewById(R.id.nav_to_my_location);
         navToMyLocation.setOnClickListener(new View.OnClickListener() {
@@ -151,6 +165,7 @@ public class GPSFragment extends Fragment {
 
         /**
          * 百度地图地址刷新后的回调，注意此方法调用在子线程中
+         *
          * @param location
          */
         @Override
@@ -168,6 +183,16 @@ public class GPSFragment extends Fragment {
             } else if (location.getLocType() == BDLocation.TypeNetWorkLocation) {
                 sb.append("网络");
             }
+
+            Date date = new Date(System.currentTimeMillis());
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
+            String dateStr = sdf.format(date);
+            List<String> list = new ArrayList<>();
+            list.add(location.getLongitude() + "");
+            list.add(location.getLatitude() + "");
+            list.add(location.getAddress().address);
+            list.add(dateStr);
+            mInfo.add(list);
 
             //更新地址信息
             mTextView.post(new Runnable() {
@@ -201,6 +226,7 @@ public class GPSFragment extends Fragment {
 
     /**
      * 导航至我的位置
+     *
      * @param location
      */
     private void navigateToMyLocation(BDLocation location) {
@@ -268,11 +294,13 @@ public class GPSFragment extends Fragment {
         super.onResume();
         mMapView.onResume();
     }
+
     @Override
     public void onPause() {
         super.onPause();
         mMapView.onPause();
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -280,5 +308,14 @@ public class GPSFragment extends Fragment {
         mMapView.onDestroy();
         mBaiduMap.setMyLocationEnabled(false);
         myOrientationListener.stop();
+    }
+
+    public void saveToCSV() {
+        FileHelper.open(FileHelper.GPS);
+        FileHelper.writeCsv(mInfo);
+        FileHelper.flush();
+        mInfo.clear();
+        Snackbar.make(mTextView, "保存成功 " + FileHelper.mFileName, Snackbar.LENGTH_LONG).show();
+
     }
 }

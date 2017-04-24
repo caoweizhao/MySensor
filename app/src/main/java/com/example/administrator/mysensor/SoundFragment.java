@@ -6,6 +6,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,7 +22,9 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -49,6 +52,11 @@ public class SoundFragment extends Fragment {
      */
     private List<Entry> mEntries = new ArrayList<>();
 
+    /**
+     * 保存所有坐标
+     */
+    List<Entry> mEntryList = new ArrayList<>();
+
     public static SoundFragment newInstance() {
         SoundFragment lightFragment = new SoundFragment();
 
@@ -61,6 +69,12 @@ public class SoundFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
+        view.findViewById(R.id.saveToCSV).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveToCSV();
+            }
+        });
         mLineChart = (LineChart) view.findViewById(R.id.chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
         return view;
@@ -161,7 +175,9 @@ public class SoundFragment extends Fragment {
                             if (dataSet.getEntryCount() > 10) {
                                 dataSet.removeEntry(0);
                             }
-                            dataSet.addEntry(new Entry(CURRENT_OFFSET, (float) value));
+                            Entry entry = new Entry(CURRENT_OFFSET, (float) value);
+                            dataSet.addEntry(entry);
+                            mEntryList.add(entry);
 
                             dataSet.notifyDataSetChanged();
                             data.notifyDataChanged();
@@ -223,5 +239,27 @@ public class SoundFragment extends Fragment {
             isGetVoiceRun = true;
             mThread.start();
         }
+
+    }
+
+    public void saveToCSV() {
+        int count = mEntryList.size();
+        FileHelper.open(FileHelper.SOUND);
+        List<List<String>> mList = new ArrayList<>();
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
+        String dateStr = sdf.format(date);
+        for (int i = 0; i < count; i++) {
+            List<String> datas = new ArrayList<>();
+            Entry entry = mEntryList.get(i);
+            datas.add(entry.getY() + "");
+            datas.add(dateStr);
+            mList.add(datas);
+        }
+        FileHelper.writeCsv(mList);
+        FileHelper.flush();
+        mList.clear();
+        mEntryList.clear();
+        Snackbar.make(mLineChart, "保存成功 " + FileHelper.mFileName, Snackbar.LENGTH_LONG).show();
     }
 }

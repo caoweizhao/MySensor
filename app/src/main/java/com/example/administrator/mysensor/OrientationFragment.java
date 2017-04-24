@@ -8,6 +8,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +23,9 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,6 +41,10 @@ public class OrientationFragment extends Fragment {
     List<Entry> mEntries1 = new ArrayList<>();
     List<Entry> mEntries2 = new ArrayList<>();
     List<Entry> mEntries3 = new ArrayList<>();
+
+    List<Entry> mEntryList1 = new ArrayList<>();
+    List<Entry> mEntryList2 = new ArrayList<>();
+    List<Entry> mEntryList3 = new ArrayList<>();
 
     private static final int WIDTH = 10;
     private int CURRENT_OFFSET = 10;
@@ -78,9 +85,16 @@ public class OrientationFragment extends Fragment {
                     mLineChart.getXAxis().setAxisMinimum(mEntries1.get(1).getX());
                 }
 
-                mEntries1.add(new Entry(CURRENT_OFFSET, xValue));
-                mEntries2.add(new Entry(CURRENT_OFFSET, yValue));
-                mEntries3.add(new Entry(CURRENT_OFFSET, zValue));
+                Entry entry1 = new Entry(CURRENT_OFFSET, xValue);
+                Entry entry2 = new Entry(CURRENT_OFFSET, yValue);
+                Entry entry3 = new Entry(CURRENT_OFFSET, zValue);
+                mEntries1.add(entry1);
+                mEntries2.add(entry2);
+                mEntries3.add(entry3);
+
+                mEntryList1.add(entry1);
+                mEntryList2.add(entry2);
+                mEntryList3.add(entry3);
 
                 if (mLineChart.getLineData() != null && mLineChart.getLineData().getDataSetCount() > 0) {
                     LineDataSet dataSetX = (LineDataSet) mLineChart.getLineData().getDataSetByIndex(0);
@@ -143,6 +157,12 @@ public class OrientationFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_layout, container, false);
+        view.findViewById(R.id.saveToCSV).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveToCSV();
+            }
+        });
         mLineChart = (LineChart) view.findViewById(R.id.chart);
         mTextView = (TextView) view.findViewById(R.id.text_view);
         return view;
@@ -209,5 +229,32 @@ public class OrientationFragment extends Fragment {
         super.onDestroy();
     }
 
+    public void saveToCSV() {
+        int count = mEntryList1.size();
+        FileHelper.open(FileHelper.ORIENTATION);
+        List<List<String>> mList = new ArrayList<>();
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
+        String dateStr = sdf.format(date);
+        for (int i = 0; i < count; i++) {
+            List<String> datas = new ArrayList<>();
+            Entry entry1 = mEntryList1.get(i);
+            Entry entry2 = mEntryList2.get(i);
+            Entry entry3 = mEntryList3.get(i);
 
+            datas.add(entry1.getY() + "");
+            datas.add(entry2.getY() + "");
+            datas.add(entry3.getY() + "");
+            datas.add(dateStr);
+            mList.add(datas);
+        }
+        FileHelper.writeCsv(mList);
+        FileHelper.flush();
+        mList.clear();
+        mEntryList1.clear();
+        mEntryList2.clear();
+        mEntryList3.clear();
+        Snackbar.make(mLineChart, "保存成功 " + FileHelper.mFileName, Snackbar.LENGTH_LONG).show();
+
+    }
 }
